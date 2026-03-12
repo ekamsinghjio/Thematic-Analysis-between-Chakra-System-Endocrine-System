@@ -1,0 +1,37 @@
+Chakra,Gland,CosineSimilarity
+Root,Adrenal,0.0263
+Root,Gonads,0.0314
+Root,Pancreas,0.0199
+Root,Thymus,0.042
+Root,Thyroid,0.0281
+Root,Pineal,0.0511
+Sacral,Adrenal,0.0477
+Sacral,Gonads,0.0603
+Sacral,Pancreas,0.035
+Sacral,Thymus,0.0783
+Sacral,Thyroid,0.0685
+Sacral,Pineal,0.0992
+Solar Plexus,Adrenal,0.023
+Solar Plexus,Gonads,0.0189
+Solar Plexus,Pancreas,0.0087
+Solar Plexus,Thymus,0.0137
+Solar Plexus,Thyroid,0.0129
+Solar Plexus,Pineal,0.0125
+Heart,Adrenal,0.0247
+Heart,Gonads,0.0323
+Heart,Pancreas,0.0136
+Heart,Thymus,0.0468
+Heart,Thyroid,0.0358
+Heart,Pineal,0.0658
+Throat,Adrenal,0.0532
+Throat,Gonads,0.0619
+Throat,Pancreas,0.0272
+Throat,Thymus,0.0913
+Throat,Thyroid,0.0688
+Throat,Pineal,0.0953
+Third Eye,Adrenal,0.0523
+Third Eye,Gonads,0.0667
+Third Eye,Pancreas,0.0353
+Third Eye,Thymus,0.0901
+Third Eye,Thyroid,0.0619
+Third Eye,Pineal,0.0664

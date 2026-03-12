@@ -1,0 +1,6 @@
+root_vs_adrenal: 3 chakra docs + 1 endocrine docs
+sacral_vs_gonads: 4 chakra docs + 2 endocrine docs
+solar_plexus_vs_pancreas: 2 chakra docs + 1 endocrine docs
+heart_vs_thymus: 3 chakra docs + 1 endocrine docs
+throat_vs_thyroid: 3 chakra docs + 2 endocrine docs
+third_eye_vs_pineal: 4 chakra docs + 1 endocrine docs
