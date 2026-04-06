@@ -4,6 +4,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 
+from preprocessing import preprocess_text
+
 project_root = ".."
 
 chakra_root = os.path.join(project_root, "chakra_split")
@@ -18,16 +20,16 @@ def load_chakra_text(folder):
         if file.endswith(".txt"):
             with open(os.path.join(folder, file), "r", encoding="utf-8") as f:
                 text += f.read() + " "
-    return text
+    return preprocess_text(text)
 
 def load_endocrine_text(files):
     text = ""
     for file in files:
         path = os.path.join(endocrine_root, file)
         text += extract_text(path) + " "
-    return text
+    return preprocess_text(text)
 
-# ---- UPDATE THESE FILENAMES TO MATCH YOUR ACTUAL FILES ----
+# Gland groupings
 glands = {
     "Adrenal": [
         "adrenal gland 1.pdf"
@@ -51,6 +53,7 @@ glands = {
     ]
 }
 
+# Chakra folders
 chakras = {
     "Root": "root",
     "Sacral": "sacral",
@@ -65,12 +68,23 @@ rows = []
 for chakra_label, chakra_folder in chakras.items():
     chakra_text = load_chakra_text(os.path.join(chakra_root, chakra_folder))
 
+    if len(chakra_text.strip()) == 0:
+        print(f"Warning: no usable text remained for chakra folder {chakra_folder}")
+        continue
+
     for gland_label, gland_files in glands.items():
         endocrine_text = load_endocrine_text(gland_files)
 
+        if len(endocrine_text.strip()) == 0:
+            print(f"Warning: no usable text remained for gland {gland_label}")
+            continue
+
         documents = [chakra_text, endocrine_text]
 
-        vectorizer = TfidfVectorizer(stop_words="english")
+        vectorizer = TfidfVectorizer(
+            lowercase=False,       # already cleaned in preprocessing
+            ngram_range=(1, 2)
+        )
         X = vectorizer.fit_transform(documents)
 
         similarity = cosine_similarity(X[0], X[1])[0][0]
@@ -78,7 +92,7 @@ for chakra_label, chakra_folder in chakras.items():
         rows.append({
             "Chakra": chakra_label,
             "Gland": gland_label,
-            "CosineSimilarity": round(similarity, 4)
+            "CosineSimilarity": round(float(similarity), 4)
         })
 
 df = pd.DataFrame(rows)

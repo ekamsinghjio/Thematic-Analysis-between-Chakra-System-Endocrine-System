@@ -1,15 +1,11 @@
 from pdfminer.high_level import extract_text
 import os
-import re
-import nltk
-from nltk.corpus import stopwords
+import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
-# Download stopwords once
-nltk.download("stopwords")
-
-stop_words = set(stopwords.words("english"))
+# Import the shared preprocessing pipeline
+from preprocessing import preprocess_text
 
 # Project folders
 project_root = ".."
@@ -22,31 +18,20 @@ os.makedirs(results_folder, exist_ok=True)
 documents = []
 doc_names = []
 
-def clean_text(text):
-    text = text.lower()
-    text = re.sub(r"\d+", " ", text)
-    text = re.sub(r"\[[^\]]*\]", " ", text)
-    text = re.sub(r"\([^)]*\)", " ", text)
-    text = re.sub(r"[^a-z\s]", " ", text)
-
-    words = text.split()
-    words = [w for w in words if w not in stop_words and len(w) > 2]
-
-    return " ".join(words)
-
 def load_pdfs(folder):
     for file in os.listdir(folder):
         if file.endswith(".pdf"):
             path = os.path.join(folder, file)
             print(f"Reading: {file}")
-            text = extract_text(path)
-            text = clean_text(text)
 
-            if len(text.strip()) > 0:
-                documents.append(text)
+            raw_text = extract_text(path)
+            cleaned_text = preprocess_text(raw_text)
+
+            if len(cleaned_text.strip()) > 0:
+                documents.append(cleaned_text)
                 doc_names.append(file)
             else:
-                print(f"Warning: no text extracted from {file}")
+                print(f"Warning: no usable psychophysiology text remained after preprocessing for {file}")
 
 # Load both corpora
 load_pdfs(chakra_folder)
@@ -57,17 +42,27 @@ print(f"\nTotal documents loaded: {len(documents)}")
 if len(documents) < 2:
     raise ValueError("Not enough documents were loaded. Check that your PDFs are in the correct folders.")
 
-# Vectorize text
-vectorizer = CountVectorizer(max_df=0.9, min_df=2)
+# Vectorize text for topic modeling
+vectorizer = CountVectorizer(
+    max_df=0.85,
+    min_df=2,
+    ngram_range=(1, 2)
+)
 X = vectorizer.fit_transform(documents)
 
 # Fit LDA model
-lda = LatentDirichletAllocation(n_components=6, random_state=42)
+n_topics = 6
+lda = LatentDirichletAllocation(
+    n_components=n_topics,
+    random_state=42
+)
 lda.fit(X)
 
 words = vectorizer.get_feature_names_out()
 
-# Save topics
+# ------------------------------------------------------------
+# 1. Save topics
+# ------------------------------------------------------------
 topics_file = os.path.join(results_folder, "lda_topics.txt")
 with open(topics_file, "w", encoding="utf-8") as f:
     for i, topic in enumerate(lda.components_):
@@ -76,13 +71,33 @@ with open(topics_file, "w", encoding="utf-8") as f:
         print(line)
         f.write(line)
 
-# Save document names
+# ------------------------------------------------------------
+# 2. Save document names
+# ------------------------------------------------------------
 docs_file = os.path.join(results_folder, "documents_used.txt")
 with open(docs_file, "w", encoding="utf-8") as f:
     for name in doc_names:
         f.write(name + "\n")
 
+# ------------------------------------------------------------
+# 3. Compute and save document-topic distributions
+# ------------------------------------------------------------
+doc_topic_matrix = lda.transform(X)
+
+topic_columns = [f"Topic_{i+1}" for i in range(n_topics)]
+
+doc_topic_df = pd.DataFrame(doc_topic_matrix, columns=topic_columns)
+doc_topic_df.insert(0, "Document", doc_names)
+
+doc_topic_file = os.path.join(results_folder, "document_topic_distribution.csv")
+doc_topic_df.to_csv(doc_topic_file, index=False)
+
+print("\nDocument-topic distribution preview:")
+print(doc_topic_df.head())
+
 print("\nAnalysis complete.")
 print("Results saved in:")
 print(f" - {topics_file}")
 print(f" - {docs_file}")
+print(f" - {doc_topic_file}")
+

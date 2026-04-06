@@ -1,45 +1,63 @@
+import os
+import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 
-# Your final cosine similarity matrix
-data = np.array([
-    [0.0247, 0.0323, 0.0136, 0.0658, 0.0468, 0.0358],  # Heart
-    [0.0263, 0.0314, 0.0199, 0.0511, 0.0420, 0.0281],  # Root
-    [0.0477, 0.0603, 0.0350, 0.0992, 0.0783, 0.0685],  # Sacral
-    [0.0230, 0.0189, 0.0087, 0.0125, 0.0137, 0.0129],  # Solar Plexus
-    [0.0523, 0.0667, 0.0353, 0.0664, 0.0901, 0.0619],  # Third Eye
-    [0.0532, 0.0619, 0.0272, 0.0953, 0.0913, 0.0688],  # Throat
-])
+# ------------------------------------------------------------
+# Paths
+# ------------------------------------------------------------
+results_folder = "../results"
+matrix_file = os.path.join(results_folder, "all_chakra_all_gland_cosine_matrix.csv")
+output_file = os.path.join(results_folder, "updated_chakra_gland_heatmap.png")
 
-row_labels = ["Heart", "Root", "Sacral", "Solar Plexus", "Third Eye", "Throat"]
-col_labels = ["Adrenal", "Gonads", "Pancreas", "Pineal", "Thymus", "Thyroid"]
+# ------------------------------------------------------------
+# Load the UPDATED cosine similarity matrix
+# ------------------------------------------------------------
+df = pd.read_csv(matrix_file, index_col=0)
 
-fig, ax = plt.subplots(figsize=(10, 6))
+# Optional: enforce consistent row/column order
+chakra_order = ["Heart", "Root", "Sacral", "Solar Plexus", "Third Eye", "Throat"]
+gland_order = ["Adrenal", "Gonads", "Pancreas", "Pineal", "Thymus", "Thyroid"]
 
+df = df.loc[chakra_order, gland_order]
+
+# ------------------------------------------------------------
 # Create heatmap
-im = ax.imshow(data, aspect="auto")
+# ------------------------------------------------------------
+fig, ax = plt.subplots(figsize=(9, 6))
+
+im = ax.imshow(df.values, aspect="auto")
 
 # Axis labels
-ax.set_xticks(np.arange(len(col_labels)))
-ax.set_yticks(np.arange(len(row_labels)))
-ax.set_xticklabels(col_labels)
-ax.set_yticklabels(row_labels)
+ax.set_xticks(range(len(df.columns)))
+ax.set_xticklabels(df.columns, rotation=45, ha="right")
+ax.set_yticks(range(len(df.index)))
+ax.set_yticklabels(df.index)
 
-# Rotate x labels for readability
-plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+# Title
+ax.set_title("Updated Chakra–Gland Cosine Similarity Heatmap")
 
-# Add value labels in each cell
-for i in range(data.shape[0]):
-    for j in range(data.shape[1]):
-        ax.text(j, i, f"{data[i, j]:.3f}", ha="center", va="center")
+# Add cell values
+for i in range(df.shape[0]):
+    for j in range(df.shape[1]):
+        ax.text(
+            j,
+            i,
+            f"{df.iloc[i, j]:.4f}",
+            ha="center",
+            va="center",
+            fontsize=8
+        )
 
-# Title and colorbar
-ax.set_title("Cosine Similarity Between Chakra Corpora and Endocrine Gland Corpora")
+# Colorbar
 cbar = fig.colorbar(im, ax=ax)
 cbar.set_label("Cosine Similarity")
 
-fig.tight_layout()
+plt.tight_layout()
 
+# ------------------------------------------------------------
 # Save figure
-plt.savefig("../results/chakra_gland_heatmap.png", dpi=300, bbox_inches="tight")
+# ------------------------------------------------------------
+plt.savefig(output_file, dpi=300, bbox_inches="tight")
 plt.show()
+
+print(f"\nHeatmap saved to: {output_file}")
